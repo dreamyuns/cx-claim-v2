@@ -1,0 +1,32 @@
+{
+  "login": {
+    "url": "https://adm.allmytour.com",
+    "user_id": "dreamyuns",
+    "password": "0412"
+  },
+  "file_paths": {
+    "cx_excel": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\data\\cx_list.xlsx",
+    "claim_list_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\claim_list",
+    "results_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\results",
+    "logs_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\logs"
+  },
+  "urls": {
+    "base_url": "https://adm.allmytour.com",
+    "orders_page": "/orders"
+  },
+  "excel_settings": {
+    "enabled": "y",
+    "test_mode": {
+      "start_row": 2,
+      "end_row": 5
+    }
+  },
+  "email_template": {
+    "subject_template": "[{요청분류}] {체크인} ~ {체크아웃}_{숙소}_{투숙자}, CFM NO. {Book NO} {요청날짜} BY {담당자}",
+    "body_template": "테스트 입니다. 테스트 입니다.\n\n안녕하세요. 올마이투어 CX팀입니다.\n바쁘시겠지만 하기 내용 확인 후 메일 회신 부탁드립니다. 🙏\n\n\n- 아 래 -\n\n1. 예약정보 \n1) 투숙객 이름/연락처 : {투숙자명} / {투숙자 연락처} \n2) 체크인~ 아웃날짜 / 박수 : {체크인} ~ {체크아웃} / {박수}\n3) 객실수 : {객실수}\n4) 타입명 : {객실명}\n5) 상품명 : {상품명}\n6) 컨펌번호 : {Book NO}\n\n2. 요청사항 \n1) 요청사유 : {요청사유}\n2) 요청내용 : {요청사항}\n\n\n감사합니다.😊\n\n올마이투어 CX팀 드림."
+  },
+  "timing": {
+    "page_load_delay": 2,
+    "element_wait_time": 5
+  }
+}
