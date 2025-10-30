@@ -637,6 +637,9 @@ def main():
         options.add_argument('--disable-gpu')  # GPU 가속 비활성화
         options.add_argument('--window-size=1920,1080')  # 창 크기 설정
         
+        # Chrome 브라우저 경로 명시적 지정
+        options.binary_location = '/home/allmytour/bin/google-chrome'
+        
         print("독립 실행 모드: 헤드리스 모드")
         
         driver = webdriver.Chrome(service=service, options=options)

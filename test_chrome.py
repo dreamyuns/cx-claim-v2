@@ -15,28 +15,16 @@ def test_chrome():
         # ChromeDriver 서비스 설정
         service = Service('/usr/local/bin/chromedriver')
         
-        # Chrome 옵션 설정 (최소한의 옵션만 사용)
+        # Chrome 옵션 설정 (극도로 단순화)
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
         options.add_argument('--window-size=1920,1080')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-web-security')
-        options.add_argument('--allow-running-insecure-content')
-        options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
-        options.add_argument('--ignore-certificate-errors')
-        options.add_argument('--ignore-ssl-errors')
         
-        # 디버깅 포트 제거 (충돌 방지)
-        # options.add_argument('--remote-debugging-port=9222')
-        
-        # 환경 변수 설정
-        options.add_argument('--disable-software-rasterizer')
-        options.add_argument('--disable-background-timer-throttling')
-        options.add_argument('--disable-backgrounding-occluded-windows')
-        options.add_argument('--disable-renderer-backgrounding')
+        # Chrome 브라우저 경로 명시적 지정
+        options.binary_location = '/home/allmytour/bin/google-chrome'
         
         print("Chrome 옵션 설정 완료")
         
