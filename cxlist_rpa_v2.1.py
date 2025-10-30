@@ -644,11 +644,10 @@ def main():
         
         # Chrome 설정
         print("Chrome 설정 중...")
-        service = Service('/usr/local/bin/chromedriver')
         options = Options()
-        
-        # 서버 환경을 위한 헤드리스 모드 설정
-        options.add_argument('--headless')  # GUI 없이 실행
+
+        # 서버 환경을 위한 헤드리스 모드 설정 (최신 크롬 권장 플래그)
+        options.add_argument('--headless=new')  # GUI 없이 실행
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
@@ -664,12 +663,36 @@ def main():
         options.add_argument('--disable-background-timer-throttling')
         options.add_argument('--disable-backgrounding-occluded-windows')
         options.add_argument('--disable-renderer-backgrounding')
-        
-        # Chrome 브라우저 경로 명시적 지정 (Chrome for Testing 142)
-        options.binary_location = '/opt/google/chrome/chrome'
-        
+
+        # Linux 환경에서 Chrome/ChromeDriver 경로 자동 감지 (우선순위: 사용자 홈 설치 → 시스템)
+        possible_chrome_bins = [
+            '/usr/bin/google-chrome',                 # 시스템 설치 우선
+            '/home/allmytour/bin/google-chrome',      # 사용자 홈 래퍼/바이너리
+            '/opt/google/chrome/chrome',
+            '/snap/bin/chromium'
+        ]
+        chrome_bin = next((p for p in possible_chrome_bins if os.path.exists(p)), None)
+        if chrome_bin:
+            options.binary_location = chrome_bin
+            print(f"Chrome binary: {chrome_bin}")
+        else:
+            print("경고: Chrome 실행 파일을 찾지 못했습니다. PATH 의존 실행을 시도합니다.")
+
+        possible_drivers = [
+            '/home/allmytour/bin/chromedriver',
+            '/usr/local/bin/chromedriver',
+            '/usr/bin/chromedriver'
+        ]
+        driver_path = next((p for p in possible_drivers if os.path.exists(p)), None)
+        if driver_path:
+            print(f"ChromeDriver: {driver_path}")
+            service = Service(driver_path)
+        else:
+            print("경고: ChromeDriver 파일을 찾지 못했습니다. PATH 상의 chromedriver 사용을 시도합니다.")
+            service = Service()  # PATH 검색에 위임
+
         print("독립 실행 모드: 헤드리스 모드")
-        
+
         driver = webdriver.Chrome(service=service, options=options)
         print("Chrome 설정 완료!")
         
