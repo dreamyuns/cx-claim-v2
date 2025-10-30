@@ -757,21 +757,39 @@ def main():
             password_field.send_keys(config['login']['password'])
             print("비밀번호 입력 완료")
 
-            # 로그인 버튼 클릭 (안정화: 클릭 가능 대기 → JS 클릭 백업 → Enter)
-            try:
-                print("로그인 버튼 찾는 중...")
-                login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit']")))
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", login_button)
-                login_button.click()
-                print("로그인 버튼 클릭 완료 (일반 클릭)")
-            except (TimeoutException, WebDriverException):
+            # 로그인 버튼 클릭 (재조회 기반 3회 재시도 → 최종 Enter)
+            print("로그인 버튼 찾는 중...")
+            clicked = False
+            selectors = [
+                (By.CSS_SELECTOR, "input[type='submit']"),
+                (By.CSS_SELECTOR, "button[type='submit']"),
+                (By.XPATH, "//input[@type='submit' or contains(translate(@value,'login','LOGIN'),'LOGIN')]")
+            ]
+            for attempt in range(3):
                 try:
-                    login_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-                    driver.execute_script("arguments[0].click();", login_button)
-                    print("로그인 버튼 클릭 완료 (JS 클릭)")
+                    # 매 시도마다 새로 locate (stale 방지)
+                    btn = None
+                    for by, sel in selectors:
+                        elems = driver.find_elements(by, sel)
+                        if elems:
+                            btn = elems[0]
+                            break
+                    if not btn:
+                        # 잠깐 대기 후 다음 루프
+                        time.sleep(0.5)
+                        continue
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+                    driver.execute_script("arguments[0].click();", btn)
+                    clicked = True
+                    print(f"로그인 버튼 클릭 완료 (시도 {attempt+1})")
+                    break
                 except Exception:
-                    password_field.send_keys(Keys.ENTER)
-                    print("로그인 제출 (Enter 키)")
+                    time.sleep(0.5)
+                    continue
+
+            if not clicked:
+                password_field.send_keys(Keys.ENTER)
+                print("로그인 제출 (Enter 키)")
 
             # 로그인 후 전환 대기 (URL/타이틀 변화 혹은 특정 요소 대기)
             try:
