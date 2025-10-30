@@ -20,7 +20,7 @@ class CXClaimExecutor:
         self.running_process = None
         self.execution_history = []
         self.current_execution_id = None
-        self.script_path = Path(__file__).parent.parent / "cxlist_rpa_v2.0.py"
+        self.script_path = Path(__file__).parent.parent / "cxlist_rpa_v2.1.py"
         self.config_path = Path(__file__).parent.parent / "cx_claim_config.json"
         self.temp_configs_dir = Path(__file__).parent.parent / "temp_configs"
         
