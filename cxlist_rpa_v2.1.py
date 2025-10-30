@@ -15,8 +15,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
 # ✅ 1. [설정 파일 로드]
-# 독립 실행용 설정 파일 경로
-config_file = os.path.join(os.path.dirname(__file__), 'cx_claim_config.json')
+# 실행기(UI)에서 내려주는 임시 설정 파일 우선 사용 (환경변수)
+runtime_config_path = os.environ.get('CONFIG_FILE_PATH')
+default_config_path = os.path.join(os.path.dirname(__file__), 'cx_claim_config.json')
+config_file = runtime_config_path if runtime_config_path and os.path.exists(runtime_config_path) else default_config_path
 
 print(f"설정 파일 경로: {config_file}")
 
@@ -34,10 +36,23 @@ except json.JSONDecodeError as e:
 # ✅ 2. [초기화] 로그 및 결과 디렉토리 생성
 today = datetime.now().strftime('%Y%m%d')
 
-# 설정 파일의 로그 디렉토리 사용
+# 설정 파일의 로그/결과/클레임 디렉토리 사용
 log_dir = config['file_paths']['logs_dir']
 result_dir = config['file_paths']['results_dir']
 claim_dir = config['file_paths']['claim_list_dir']
+
+# 서버에서 Windows 스타일 경로가 들어온 경우 안전한 로컬 경로로 보정
+def _normalize_dir(path_value, fallback_name):
+    if not isinstance(path_value, str) or not path_value.strip():
+        return os.path.join(os.path.dirname(__file__), fallback_name)
+    # Windows 드라이브 경로나 역슬래시 포함 시 보정
+    if ":\\" in path_value or "\\" in path_value:
+        return os.path.join(os.path.dirname(__file__), fallback_name)
+    return path_value
+
+log_dir = _normalize_dir(log_dir, 'logs')
+result_dir = _normalize_dir(result_dir, 'results')
+claim_dir = _normalize_dir(claim_dir, 'claim_list')
 
 print(f"로그 디렉토리: {log_dir}")
 os.makedirs(log_dir, exist_ok=True)
@@ -669,7 +684,15 @@ def main():
         # 로그인
         try:
             print(f"로그인 페이지 접속: {config['login']['url']}")
-            driver.get(config['login']['url'])
+            # 페이지 로드 타임아웃 설정 (hang 방지)
+            try:
+                driver.set_page_load_timeout(30)
+            except Exception:
+                pass
+            try:
+                driver.get(config['login']['url'])
+            except TimeoutException:
+                print("페이지 로드 타임아웃 - 현재 상태에서 진행 시도")
             
             # 페이지 로드 대기
             wait.until(EC.presence_of_element_located((By.NAME, "userId")))
