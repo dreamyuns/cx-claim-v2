@@ -630,15 +630,26 @@ def main():
         service = Service('/usr/local/bin/chromedriver')
         options = webdriver.ChromeOptions()
         
-        # 독립 실행 모드: 일반 모드
-        print("독립 실행 모드: 일반 모드")
+        # 서버 환경을 위한 헤드리스 모드 설정
+        options.add_argument('--headless')  # GUI 없이 실행
+        options.add_argument('--no-sandbox')  # 샌드박스 비활성화
+        options.add_argument('--disable-dev-shm-usage')  # /dev/shm 사용 비활성화
+        options.add_argument('--disable-gpu')  # GPU 가속 비활성화
+        options.add_argument('--window-size=1920,1080')  # 창 크기 설정
+        options.add_argument('--disable-extensions')  # 확장 프로그램 비활성화
+        options.add_argument('--disable-logging')  # 로깅 비활성화
+        options.add_argument('--disable-web-security')  # 웹 보안 비활성화
+        options.add_argument('--allow-running-insecure-content')  # 안전하지 않은 콘텐츠 허용
+        
+        print("독립 실행 모드: 헤드리스 모드")
         
         driver = webdriver.Chrome(service=service, options=options)
         print("ChromeDriver 설정 완료!")
         
-        driver.maximize_window()
-        driver.set_window_position(0, 0)
-        driver.set_window_size(1920, 1080)
+        # 헤드리스 모드에서는 창 크기 설정이 옵션에서 처리됨
+        # driver.maximize_window()  # 헤드리스 모드에서는 사용 불가
+        # driver.set_window_position(0, 0)  # 헤드리스 모드에서는 사용 불가
+        # driver.set_window_size(1920, 1080)  # 옵션에서 이미 설정됨
         
         # 로그인
         try:
