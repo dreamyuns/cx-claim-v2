@@ -641,6 +641,23 @@ def main():
         options.add_argument('--disable-web-security')  # 웹 보안 비활성화
         options.add_argument('--allow-running-insecure-content')  # 안전하지 않은 콘텐츠 허용
         
+        # 추가 보안 및 안정성 옵션
+        options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument('--ignore-ssl-errors')
+        options.add_argument('--ignore-certificate-errors-spki-list')
+        options.add_argument('--ignore-certificate-errors-spki-list')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--disable-background-timer-throttling')
+        options.add_argument('--disable-backgrounding-occluded-windows')
+        options.add_argument('--disable-renderer-backgrounding')
+        
+        # 타임아웃 설정
+        options.add_argument('--timeout=30000')
+        options.add_argument('--page-load-strategy=eager')
+        
         print("독립 실행 모드: 헤드리스 모드")
         
         driver = webdriver.Chrome(service=service, options=options)
@@ -651,15 +668,40 @@ def main():
         # driver.set_window_position(0, 0)  # 헤드리스 모드에서는 사용 불가
         # driver.set_window_size(1920, 1080)  # 옵션에서 이미 설정됨
         
+        # WebDriverWait 설정
+        wait = WebDriverWait(driver, 30)  # 30초 대기
+        
         # 로그인
         try:
+            print(f"로그인 페이지 접속: {config['login']['url']}")
             driver.get(config['login']['url'])
-            time.sleep(2)
-            driver.find_element(By.NAME, "userId").send_keys(config['login']['user_id'])
-            driver.find_element(By.NAME, "userPasswd").send_keys(config['login']['password'])
-            driver.find_element(By.XPATH, "//input[@type='submit']").click()
-            time.sleep(2)
+            
+            # 페이지 로드 대기
+            wait.until(EC.presence_of_element_located((By.NAME, "userId")))
+            print("로그인 페이지 로드 완료")
+            
+            # 로그인 폼 입력
+            user_id_field = driver.find_element(By.NAME, "userId")
+            password_field = driver.find_element(By.NAME, "userPasswd")
+            
+            user_id_field.clear()
+            user_id_field.send_keys(config['login']['user_id'])
+            print("사용자 ID 입력 완료")
+            
+            password_field.clear()
+            password_field.send_keys(config['login']['password'])
+            print("비밀번호 입력 완료")
+            
+            # 로그인 버튼 클릭
+            login_button = driver.find_element(By.XPATH, "//input[@type='submit']")
+            login_button.click()
+            print("로그인 버튼 클릭 완료")
+            
+            # 로그인 후 페이지 로드 대기
+            time.sleep(3)
+            print(f"로그인 후 페이지 제목: {driver.title}")
             print("로그인 완료!")
+            
         except Exception as e:
             print(f"로그인 실패: {e}")
             log_error(f"로그인 실패: {e}")
