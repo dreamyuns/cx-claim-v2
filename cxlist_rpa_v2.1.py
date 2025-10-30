@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 # from webdriver_manager.chrome import ChromeDriverManager  # 시스템 ChromeDriver 사용으로 주석 처리
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 
 # ✅ 1. [설정 파일 로드]
 # 실행기(UI)에서 내려주는 임시 설정 파일 우선 사용 (환경변수)
@@ -146,6 +147,65 @@ def log_error(message):
     with open(result_file, 'a', encoding='utf-8') as f:
         f.write(error_content + '\n')
     print(f"ERROR: {message}")
+
+# ✅ 공통 Selenium 헬퍼 (서버 안정화용)
+def wait_for_presence(driver, locator, timeout=30):
+    return WebDriverWait(driver, timeout).until(EC.presence_of_element_located(locator))
+
+def wait_for_clickable(driver, locator, timeout=30):
+    return WebDriverWait(driver, timeout).until(EC.element_to_be_clickable(locator))
+
+def type_safely(driver, locator, text, clear=True, timeout=30):
+    element = wait_for_presence(driver, locator, timeout)
+    try:
+        if clear:
+            element.clear()
+        element.send_keys(text)
+        return True
+    except StaleElementReferenceException:
+        element = wait_for_presence(driver, locator, timeout)
+        if clear:
+            element.clear()
+        element.send_keys(text)
+        return True
+    except Exception as e:
+        log_error(f"입력 실패 {locator}: {e}")
+        return False
+
+def click_safely(driver, locators, retries=3, scroll=True):
+    for attempt in range(retries):
+        try:
+            # 매 시도마다 새로 조회
+            for by, sel in locators:
+                elems = driver.find_elements(by, sel)
+                if elems:
+                    el = elems[0]
+                    if scroll:
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
+                    # JS 클릭(레이어 가림 회피)
+                    driver.execute_script("arguments[0].click();", el)
+                    return True
+            time.sleep(0.3)
+        except StaleElementReferenceException:
+            time.sleep(0.3)
+            continue
+        except Exception:
+            time.sleep(0.3)
+            continue
+    return False
+
+def submit_form_safely(driver, from_element):
+    try:
+        form = from_element.find_element(By.XPATH, "ancestor::form")
+        driver.execute_script("arguments[0].submit()", form)
+        return True
+    except Exception:
+        try:
+            from_element.send_keys(Keys.ENTER)
+            return True
+        except Exception as e:
+            log_error(f"폼 제출 실패: {e}")
+            return False
 
 # ✅ 실행 시작 로그
 def log_start():
@@ -748,48 +808,32 @@ def main():
             password_field = wait.until(EC.element_to_be_clickable((By.NAME, "userPasswd")))
             print("로그인 페이지 로드 완료")
 
-            # 로그인 폼 입력
-            user_id_field.clear()
-            user_id_field.send_keys(config['login']['user_id'])
-            print("사용자 ID 입력 완료")
-
-            password_field.clear()
-            password_field.send_keys(config['login']['password'])
-            print("비밀번호 입력 완료")
+            # 로그인 폼 입력 (안전 입력 헬퍼 사용)
+            user_ok = type_safely(driver, (By.NAME, "userId"), config['login']['user_id'])
+            pw_ok = type_safely(driver, (By.NAME, "userPasswd"), config['login']['password'])
+            user_id_field = driver.find_element(By.NAME, "userId")
+            password_field = driver.find_element(By.NAME, "userPasswd")
+            if user_ok:
+                print("사용자 ID 입력 완료")
+            if pw_ok:
+                print("비밀번호 입력 완료")
 
             # 로그인 버튼 클릭 (재조회 기반 3회 재시도 → 최종 Enter)
-            print("로그인 버튼 찾는 중...")
-            clicked = False
-            selectors = [
-                (By.CSS_SELECTOR, "input[type='submit']"),
-                (By.CSS_SELECTOR, "button[type='submit']"),
-                (By.XPATH, "//input[@type='submit' or contains(translate(@value,'login','LOGIN'),'LOGIN')]")
-            ]
-            for attempt in range(3):
-                try:
-                    # 매 시도마다 새로 locate (stale 방지)
-                    btn = None
-                    for by, sel in selectors:
-                        elems = driver.find_elements(by, sel)
-                        if elems:
-                            btn = elems[0]
-                            break
-                    if not btn:
-                        # 잠깐 대기 후 다음 루프
-                        time.sleep(0.5)
-                        continue
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
-                    driver.execute_script("arguments[0].click();", btn)
-                    clicked = True
-                    print(f"로그인 버튼 클릭 완료 (시도 {attempt+1})")
-                    break
-                except Exception:
-                    time.sleep(0.5)
-                    continue
-
-            if not clicked:
-                password_field.send_keys(Keys.ENTER)
-                print("로그인 제출 (Enter 키)")
+            print("로그인 제출 시도 (form submit 우선)...")
+            submitted = submit_form_safely(driver, password_field)
+            if not submitted:
+                print("form submit 실패 → 버튼 클릭 시도")
+                clicked = click_safely(driver, [
+                    (By.CSS_SELECTOR, "input[type='submit']"),
+                    (By.CSS_SELECTOR, "button[type='submit']"),
+                    (By.XPATH, "//input[@type='submit' or contains(translate(@value,'login','LOGIN'),'LOGIN')]")
+                ], retries=3)
+                if not clicked:
+                    print("버튼 클릭 실패 → Enter 대체 제출")
+                    try:
+                        password_field.send_keys(Keys.ENTER)
+                    except Exception:
+                        pass
 
             # 로그인 후 전환 대기 (URL/타이틀 변화 혹은 특정 요소 대기)
             try:
