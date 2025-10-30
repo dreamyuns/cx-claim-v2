@@ -636,6 +636,9 @@ def main():
         options.add_argument('--width=1920')
         options.add_argument('--height=1080')
         
+        # Firefox 바이너리 경로 명시적 지정
+        options.binary_location = '/usr/bin/firefox'
+        
         print("독립 실행 모드: 헤드리스 모드")
         
         driver = webdriver.Firefox(service=service, options=options)
