@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 # from webdriver_manager.chrome import ChromeDriverManager  # 시스템 ChromeDriver 사용으로 주석 처리
+from selenium.common.exceptions import TimeoutException, WebDriverException
 
 # ✅ 1. [설정 파일 로드]
 # 독립 실행용 설정 파일 경로
@@ -686,13 +687,32 @@ def main():
             password_field.send_keys(config['login']['password'])
             print("비밀번호 입력 완료")
             
-            # 로그인 버튼 클릭
-            login_button = driver.find_element(By.XPATH, "//input[@type='submit']")
-            login_button.click()
-            print("로그인 버튼 클릭 완료")
-            
-            # 로그인 후 페이지 로드 대기
-            time.sleep(3)
+            # 로그인 버튼 클릭 (안정화: 클릭 가능 대기 → JS 클릭 백업 → Enter)
+            try:
+                print("로그인 버튼 찾는 중...")
+                # 1) 클릭 가능 상태 대기 후 클릭
+                login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit']")))
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", login_button)
+                login_button.click()
+                print("로그인 버튼 클릭 완료 (일반 클릭)")
+            except (TimeoutException, WebDriverException) as e:
+                try:
+                    # 2) 자바스크립트로 강제 클릭
+                    login_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
+                    driver.execute_script("arguments[0].click();", login_button)
+                    print("로그인 버튼 클릭 완료 (JS 클릭)")
+                except Exception:
+                    # 3) Enter 키로 제출
+                    password_field.send_keys(Keys.ENTER)
+                    print("로그인 제출 (Enter 키)")
+
+            # 로그인 후 전환 대기 (URL/타이틀 변화 혹은 특정 요소 대기)
+            try:
+                wait.until(lambda d: "login" not in d.current_url.lower())
+            except TimeoutException:
+                pass
+
+            time.sleep(2)
             print(f"로그인 후 페이지 제목: {driver.title}")
             print("로그인 완료!")
             
@@ -718,6 +738,19 @@ def main():
         
     except Exception as e:
         print(f"메인 실행 중 오류 발생: {e}")
+        # 실패 시 현재 화면 스냅샷/HTML 저장
+        try:
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            screenshot_path = os.path.join(result_dir, f"error_screenshot_{ts}.png")
+            html_path = os.path.join(result_dir, f"error_page_{ts}.html")
+            if 'driver' in globals():
+                driver.save_screenshot(screenshot_path)
+                with open(html_path, 'w', encoding='utf-8') as f:
+                    f.write(driver.page_source)
+                print(f"에러 스크린샷 저장: {screenshot_path}")
+                print(f"에러 HTML 저장: {html_path}")
+        except Exception as se:
+            print(f"에러 증빙 저장 중 추가 오류: {se}")
         log_error(f"메인 실행 중 오류: {e}")
     finally:
         # Lock 파일 제거
