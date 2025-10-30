@@ -18,6 +18,9 @@ def test_firefox():
         options.add_argument('--width=1920')
         options.add_argument('--height=1080')
         
+        # Firefox 바이너리 경로 명시적 지정
+        options.binary_location = '/usr/bin/firefox'
+        
         print("Firefox 옵션 설정 완료")
         
         # Firefox 실행
