@@ -647,16 +647,23 @@ def main():
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
         options.add_argument('--ignore-certificate-errors-spki-list')
-        options.add_argument('--ignore-certificate-errors-spki-list')
         options.add_argument('--disable-features=VizDisplayCompositor')
-        options.add_argument('--remote-debugging-port=9222')
         options.add_argument('--disable-background-timer-throttling')
         options.add_argument('--disable-backgrounding-occluded-windows')
         options.add_argument('--disable-renderer-backgrounding')
         
+        # 디버깅을 위한 옵션 (문제 해결 후 제거 가능)
+        options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--enable-logging')
+        options.add_argument('--log-level=0')
+        
         # 타임아웃 설정
         options.add_argument('--timeout=30000')
         options.add_argument('--page-load-strategy=eager')
+        
+        # 환경 변수 설정
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-software-rasterizer')
         
         print("독립 실행 모드: 헤드리스 모드")
         
