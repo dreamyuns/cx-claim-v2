@@ -10,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager  # 시스템 ChromeDriver 사용으로 주석 처리
 
 # ✅ 1. [설정 파일 로드]
 # 독립 실행용 설정 파일 경로
@@ -626,8 +626,8 @@ def main():
         log_start()
         
         # ChromeDriver 설정
-        print("ChromeDriver 자동 다운로드 및 설정 중...")
-        service = Service(ChromeDriverManager().install())
+        print("ChromeDriver 설정 중...")
+        service = Service('/usr/local/bin/chromedriver')
         options = webdriver.ChromeOptions()
         
         # 독립 실행 모드: 일반 모드
