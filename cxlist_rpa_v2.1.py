@@ -664,6 +664,17 @@ def main():
         options.add_argument('--disable-backgrounding-occluded-windows')
         options.add_argument('--disable-renderer-backgrounding')
 
+        # 지역/UA 설정 및 간단 반봇 우회 플래그
+        options.add_argument('--lang=ko-KR')
+        options.add_argument('--accept-lang=ko-KR,ko')
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
+        try:
+            options.add_argument('--disable-blink-features=AutomationControlled')
+            options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            options.add_experimental_option('useAutomationExtension', False)
+        except Exception:
+            pass
+
         # Linux 환경에서 Chrome/ChromeDriver 경로 자동 감지 (우선순위: 사용자 홈 설치 → 시스템)
         possible_chrome_bins = [
             '/usr/bin/google-chrome',                 # 시스템 설치 우선
@@ -707,48 +718,58 @@ def main():
         # 로그인
         try:
             print(f"로그인 페이지 접속: {config['login']['url']}")
-            # 페이지 로드 타임아웃 설정 (hang 방지)
+            # 페이지 로드 타임아웃 설정 (늘림)
             try:
-                driver.set_page_load_timeout(30)
+                driver.set_page_load_timeout(60)
             except Exception:
                 pass
+
+            # 1차 진입
             try:
                 driver.get(config['login']['url'])
             except TimeoutException:
-                print("페이지 로드 타임아웃 - 현재 상태에서 진행 시도")
-            
-            # 페이지 로드 대기
-            wait.until(EC.presence_of_element_located((By.NAME, "userId")))
+                print("페이지 로드 타임아웃 - 재시도 1회")
+                try:
+                    driver.get(config['login']['url'])
+                except TimeoutException:
+                    print("페이지 로드 타임아웃 - 현재 상태에서 진행 시도")
+
+            # about:blank 대응 - 명시적 로그인 경로로 재시도
+            if driver.current_url.strip().lower().startswith("about:blank"):
+                fallback_login = config['login']['url'].rstrip('/') + '/login'
+                print(f"about:blank 감지 → {fallback_login} 재진입")
+                try:
+                    driver.get(fallback_login)
+                except TimeoutException:
+                    print("fallback 경로도 타임아웃 - 요소 대기로 진행")
+
+            # 로그인 폼 요소 대기 (존재 + 클릭 가능)
+            user_id_field = wait.until(EC.element_to_be_clickable((By.NAME, "userId")))
+            password_field = wait.until(EC.element_to_be_clickable((By.NAME, "userPasswd")))
             print("로그인 페이지 로드 완료")
-            
+
             # 로그인 폼 입력
-            user_id_field = driver.find_element(By.NAME, "userId")
-            password_field = driver.find_element(By.NAME, "userPasswd")
-            
             user_id_field.clear()
             user_id_field.send_keys(config['login']['user_id'])
             print("사용자 ID 입력 완료")
-            
+
             password_field.clear()
             password_field.send_keys(config['login']['password'])
             print("비밀번호 입력 완료")
-            
+
             # 로그인 버튼 클릭 (안정화: 클릭 가능 대기 → JS 클릭 백업 → Enter)
             try:
                 print("로그인 버튼 찾는 중...")
-                # 1) 클릭 가능 상태 대기 후 클릭
                 login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit']")))
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", login_button)
                 login_button.click()
                 print("로그인 버튼 클릭 완료 (일반 클릭)")
-            except (TimeoutException, WebDriverException) as e:
+            except (TimeoutException, WebDriverException):
                 try:
-                    # 2) 자바스크립트로 강제 클릭
                     login_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
                     driver.execute_script("arguments[0].click();", login_button)
                     print("로그인 버튼 클릭 완료 (JS 클릭)")
                 except Exception:
-                    # 3) Enter 키로 제출
                     password_field.send_keys(Keys.ENTER)
                     print("로그인 제출 (Enter 키)")
 
