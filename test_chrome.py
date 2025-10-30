@@ -15,7 +15,7 @@ def test_chrome():
         # ChromeDriver 서비스 설정
         service = Service('/usr/local/bin/chromedriver')
         
-        # Chrome 옵션 설정 (안정성 강화)
+        # Chrome 옵션 설정 (서버 환경 최적화)
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
@@ -23,22 +23,19 @@ def test_chrome():
         options.add_argument('--disable-gpu')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--disable-extensions')
-        options.add_argument('--disable-plugins')
-        options.add_argument('--disable-images')
-        options.add_argument('--disable-javascript')
+        options.add_argument('--disable-logging')
         options.add_argument('--disable-web-security')
         options.add_argument('--allow-running-insecure-content')
         options.add_argument('--ignore-certificate-errors')
         options.add_argument('--ignore-ssl-errors')
-        options.add_argument('--ignore-certificate-errors-spki-list')
         options.add_argument('--disable-features=VizDisplayCompositor')
+        options.add_argument('--remote-debugging-port=9222')
         options.add_argument('--disable-background-timer-throttling')
         options.add_argument('--disable-backgrounding-occluded-windows')
         options.add_argument('--disable-renderer-backgrounding')
-        options.add_argument('--disable-ipc-flooding-protection')
         
-        # Chrome 브라우저 경로 명시적 지정
-        options.binary_location = '/home/allmytour/bin/google-chrome'
+        # Chrome 브라우저 경로 명시적 지정 (Chrome for Testing 142)
+        options.binary_location = '/opt/google/chrome/chrome'
         
         print("Chrome 옵션 설정 완료")
         

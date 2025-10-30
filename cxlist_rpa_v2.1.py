@@ -9,8 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 # from webdriver_manager.chrome import ChromeDriverManager  # 시스템 ChromeDriver 사용으로 주석 처리
 
 # ✅ 1. [설정 파일 로드]
@@ -626,23 +626,36 @@ def main():
         # 실행 시작 로그
         log_start()
         
-        # Firefox 설정
-        print("Firefox 설정 중...")
-        service = Service()  # Firefox는 자동으로 geckodriver 찾음
+        # Chrome 설정
+        print("Chrome 설정 중...")
+        service = Service('/usr/local/bin/chromedriver')
         options = Options()
         
         # 서버 환경을 위한 헤드리스 모드 설정
         options.add_argument('--headless')  # GUI 없이 실행
-        options.add_argument('--width=1920')
-        options.add_argument('--height=1080')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--window-size=1920,1080')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-logging')
+        options.add_argument('--disable-web-security')
+        options.add_argument('--allow-running-insecure-content')
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument('--ignore-ssl-errors')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--disable-background-timer-throttling')
+        options.add_argument('--disable-backgrounding-occluded-windows')
+        options.add_argument('--disable-renderer-backgrounding')
         
-        # Firefox 바이너리 경로 명시적 지정
-        options.binary_location = '/usr/bin/firefox'
+        # Chrome 브라우저 경로 명시적 지정 (Chrome for Testing 142)
+        options.binary_location = '/opt/google/chrome/chrome'
         
         print("독립 실행 모드: 헤드리스 모드")
         
-        driver = webdriver.Firefox(service=service, options=options)
-        print("Firefox 설정 완료!")
+        driver = webdriver.Chrome(service=service, options=options)
+        print("Chrome 설정 완료!")
         
         # 헤드리스 모드에서는 창 크기 설정이 옵션에서 처리됨
         # driver.maximize_window()  # 헤드리스 모드에서는 사용 불가
