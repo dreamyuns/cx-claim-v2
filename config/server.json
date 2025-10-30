@@ -5,10 +5,10 @@
     "password": "0412"
   },
   "file_paths": {
-    "cx_excel": "c:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\uploads\\cx_list_20251029_181341.xlsx",
-    "claim_list_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\claim_list",
-    "results_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\results",
-    "logs_dir": "C:\\Users\\윤성균\\Documents\\python_study\\CX_클레임처리V2.0\\logs"
+    "cx_excel": "data/cx_list.xlsx",
+    "claim_list_dir": "claim_list",
+    "results_dir": "results",
+    "logs_dir": "logs"
   },
   "urls": {
     "base_url": "https://adm.allmytour.com",

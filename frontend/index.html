@@ -572,28 +572,38 @@
                 </div>
 
                 <div class="config-section">
-                    <h4>📁 파일 경로</h4>
+                    <h4>📁 파일 관리</h4>
                     <div class="alert alert-info" style="margin-bottom: 15px; padding: 15px; background-color: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; color: #004085;">
-                        <strong>💡 경로 입력 안내:</strong><br>
-                        • <strong>로컬 테스트:</strong> Windows 경로 입력 가능 (예: C:\Users\...)<br>
-                        • <strong>서버 배포:</strong> Linux 경로 입력 (예: /home/user/projects/data/파일명.xlsx)<br>
-                        • <strong>자동 변환:</strong> Windows 경로 입력 시 서버 경로로 자동 변환됩니다.
+                        <strong>💡 파일 관리 안내:</strong><br>
+                        • <strong>CX Excel:</strong> 파일을 업로드하여 사용합니다<br>
+                        • <strong>결과 파일:</strong> 실행 완료 후 다운로드 가능합니다<br>
+                        • <strong>자동 정리:</strong> 실행 완료 후 30초 뒤 자동으로 파일이 정리됩니다
                     </div>
+                    
+                    <!-- CX Excel 파일 업로드 -->
                     <div class="form-group">
-                        <label for="cxExcel">CX Excel 파일 경로</label>
-                        <input type="text" id="cxExcel" placeholder="cx_list.xlsx 엑셀파일 경로 입력 (Windows 또는 Linux 경로)">
+                        <label for="cxExcelUpload">CX Excel 파일</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="file" id="cxExcelUpload" accept=".xlsx,.xls,.csv" style="flex: 1; padding: 8px; border: 1px solid #ced4da; border-radius: 5px;">
+                            <button type="button" class="btn btn-primary" onclick="uploadCxExcel()">업로드</button>
+                        </div>
+                        <div id="cxExcelInfo" style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; display: none;">
+                            <!-- 업로드된 파일 정보가 여기에 표시됩니다 -->
+                        </div>
+                        <div id="cxExcelError" style="margin-top: 10px; color: #dc3545; display: none;">
+                            <!-- 에러 메시지가 여기에 표시됩니다 -->
+                        </div>
                     </div>
+                    
+                    <!-- 결과 파일 다운로드 -->
                     <div class="form-group">
-                        <label for="claimListDir">클레임 리스트 디렉토리</label>
-                        <input type="text" id="claimListDir" placeholder="claim_list 폴더경로 입력">
-                    </div>
-                    <div class="form-group">
-                        <label for="resultsDir">결과 디렉토리</label>
-                        <input type="text" id="resultsDir" placeholder="results 폴더 경로 입력">
-                    </div>
-                    <div class="form-group">
-                        <label for="logsDir">로그 디렉토리</label>
-                        <input type="text" id="logsDir" placeholder="logs 폴더 경로 입력">
+                        <label>결과 파일 다운로드</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" class="btn btn-success" onclick="downloadResults()" id="downloadResultsBtn" disabled>다운로드 (ZIP)</button>
+                        </div>
+                        <div style="margin-top: 5px; font-size: 14px; color: #6c757d;">
+                            실행 완료 후 results, logs, claim_list 파일들을 ZIP으로 다운로드할 수 있습니다.
+                        </div>
                     </div>
                 </div>
 
@@ -611,22 +621,6 @@
                     </div>
                 </div>
 
-                <!-- 데이터 미리보기 섹션 추가 -->
-                <div class="config-section">
-                    <h4>📊 데이터 미리보기</h4>
-                    <button class="btn btn-primary" onclick="loadDataPreview()">데이터 새로고침</button>
-                    <div id="dataPreview" class="data-preview" style="margin-top: 20px;">
-                        <div class="preview-header">
-                            <h5>📊 Excel 데이터 현황</h5>
-                        </div>
-                        <div id="previewStats" class="preview-stats">
-                            <!-- 통계 카드들이 여기에 동적으로 생성됩니다 -->
-                        </div>
-                        <div id="previewTable">
-                            <!-- 데이터 테이블이 여기에 동적으로 생성됩니다 -->
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- 메일 템플릿 탭 -->
@@ -818,12 +812,6 @@
             document.getElementById('userId').value = formData.login?.user_id || '';
             document.getElementById('password').value = formData.login?.password || '';
 
-            // 파일 경로 (로컬 스토리지에서 복원)
-            document.getElementById('cxExcel').value = formData.file_paths?.cx_excel || '';
-            document.getElementById('claimListDir').value = formData.file_paths?.claim_list_dir || '';
-            document.getElementById('resultsDir').value = formData.file_paths?.results_dir || '';
-            document.getElementById('logsDir').value = formData.file_paths?.logs_dir || '';
-
             // 실행 설정
             document.getElementById('pageLoadDelay').value = formData.timing?.page_load_delay || 3;
             document.getElementById('elementWaitTime').value = formData.timing?.element_wait_time || 10;
@@ -844,12 +832,6 @@
             document.getElementById('loginUrl').value = currentConfig.login?.url || '';
             document.getElementById('userId').value = currentConfig.login?.user_id || '';
             document.getElementById('password').value = currentConfig.login?.password || '';
-
-            // 파일 경로 - 플레이스홀더만 표시하도록 value 설정 제거
-            // document.getElementById('cxExcel').value = currentConfig.file_paths?.cx_excel || '';
-            // document.getElementById('claimListDir').value = currentConfig.file_paths?.claim_list_dir || '';
-            // document.getElementById('resultsDir').value = currentConfig.file_paths?.results_dir || '';
-            // document.getElementById('logsDir').value = currentConfig.file_paths?.logs_dir || '';
 
             // 실행 설정
             document.getElementById('pageLoadDelay').value = currentConfig.timing?.page_load_delay || 3;
@@ -873,12 +855,6 @@
                         url: document.getElementById('loginUrl').value,
                         user_id: document.getElementById('userId').value,
                         password: document.getElementById('password').value
-                    },
-                    file_paths: {
-                        cx_excel: document.getElementById('cxExcel').value,
-                        claim_list_dir: document.getElementById('claimListDir').value,
-                        results_dir: document.getElementById('resultsDir').value,
-                        logs_dir: document.getElementById('logsDir').value
                     },
                     timing: {
                         page_load_delay: parseInt(document.getElementById('pageLoadDelay').value) || 3,
@@ -1098,71 +1074,6 @@
             }
         }
 
-        // 데이터 미리보기 로드
-        async function loadDataPreview() {
-            try {
-                const response = await fetch('/api/excel-data');
-                const result = await response.json();
-                
-                if (result.success) {
-                    displayDataPreview(result.data);
-                } else {
-                    showError('데이터 로드 실패: ' + result.error);
-                }
-            } catch (error) {
-                showError('데이터 로드 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        // 데이터 미리보기 표시
-        function displayDataPreview(data) {
-            const statsContainer = document.getElementById('previewStats');
-            const tableContainer = document.getElementById('previewTable');
-
-            // 통계 카드 생성
-            statsContainer.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${data.total_count || 0}</div>
-                    <div class="stat-label">총 데이터 수</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${data.today_count || 0}</div>
-                    <div class="stat-label">오늘 처리 대상</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${Object.keys(data.category_stats || {}).length}</div>
-                    <div class="stat-label">요청 분류 수</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${Object.keys(data.manager_stats || {}).length}</div>
-                    <div class="stat-label">담당자 수</div>
-                </div>
-            `;
-
-            // 데이터 테이블 생성
-            if (data.sample_data && data.sample_data.length > 0) {
-                let tableHTML = '<table class="data-table"><thead><tr>';
-                tableHTML += '<th>NO</th><th>주문번호</th><th>고객명</th><th>요청분류</th><th>요청사유</th><th>담당자</th><th>요청날짜</th>';
-                tableHTML += '</tr></thead><tbody>';
-
-                data.sample_data.forEach(row => {
-                    tableHTML += '<tr>';
-                    tableHTML += `<td>${row.no || ''}</td>`;
-                    tableHTML += `<td>${row.order_number || ''}</td>`;
-                    tableHTML += `<td>${row.customer_name || ''}</td>`;
-                    tableHTML += `<td>${row.request_category || ''}</td>`;
-                    tableHTML += `<td>${row.request_reason || ''}</td>`;
-                    tableHTML += `<td>${row.manager || ''}</td>`;
-                    tableHTML += `<td>${row.request_date || ''}</td>`;
-                    tableHTML += '</tr>';
-                });
-
-                tableHTML += '</tbody></table>';
-                tableContainer.innerHTML = tableHTML;
-            } else {
-                tableContainer.innerHTML = '<p>표시할 데이터가 없습니다.</p>';
-            }
-        }
 
         // 메일 템플릿 기본값
         const defaultEmailTemplates = {
@@ -1247,6 +1158,140 @@
         function showError(message) {
             alert('❌ ' + message);
         }
+
+        // ===== 파일 업로드/다운로드 함수들 =====
+        
+        // CX Excel 파일 업로드
+        async function uploadCxExcel() {
+            const fileInput = document.getElementById('cxExcelUpload');
+            const file = fileInput.files[0];
+            const errorDiv = document.getElementById('cxExcelError');
+            const infoDiv = document.getElementById('cxExcelInfo');
+            
+            // 에러 메시지 숨기기
+            errorDiv.style.display = 'none';
+            infoDiv.style.display = 'none';
+            
+            if (!file) {
+                showError('파일을 선택해주세요.');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/api/upload-cx-excel', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 성공 메시지 표시
+                    infoDiv.innerHTML = `
+                        <div style="color: #28a745; font-weight: bold;">✅ 업로드 완료</div>
+                        <div style="margin-top: 5px;">
+                            <strong>파일명:</strong> ${result.filename}<br>
+                            <strong>크기:</strong> ${(result.file_size / 1024).toFixed(1)} KB<br>
+                            <strong>업로드 시간:</strong> ${new Date(result.upload_time).toLocaleString()}
+                        </div>
+                    `;
+                    infoDiv.style.display = 'block';
+                    
+                    // 파일 입력 초기화
+                    fileInput.value = '';
+                    
+                    showSuccess('파일이 성공적으로 업로드되었습니다.');
+                } else {
+                    errorDiv.textContent = result.error;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = '파일 업로드 중 오류가 발생했습니다: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // 결과 파일 다운로드
+        async function downloadResults() {
+            try {
+                const response = await fetch('/api/download-results');
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showSuccess('결과 파일이 다운로드되었습니다.');
+                } else {
+                    const result = await response.json();
+                    showError(result.error || '다운로드 실패');
+                }
+            } catch (error) {
+                showError('다운로드 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 다운로드 버튼 상태 확인
+        async function checkDownloadAvailability() {
+            try {
+                const response = await fetch('/api/results-list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const files = result.files;
+                    const hasFiles = (files.results && files.results.length > 0) || 
+                                   (files.logs && files.logs.length > 0) || 
+                                   (files.claim_list && files.claim_list.length > 0);
+                    
+                    const downloadBtn = document.getElementById('downloadResultsBtn');
+                    downloadBtn.disabled = !hasFiles;
+                }
+            } catch (error) {
+                console.log('다운로드 가능 여부 확인 실패:', error);
+            }
+        }
+        
+        // 업로드된 파일 정보 로드
+        async function loadUploadedFiles() {
+            try {
+                const response = await fetch('/api/uploaded-files');
+                const result = await response.json();
+                
+                if (result.success && result.files.length > 0) {
+                    const file = result.files[0]; // CX Excel 파일
+                    const infoDiv = document.getElementById('cxExcelInfo');
+                    infoDiv.innerHTML = `
+                        <div style="color: #28a745; font-weight: bold;">✅ 업로드된 파일</div>
+                        <div style="margin-top: 5px;">
+                            <strong>파일명:</strong> ${file.filename}<br>
+                            <strong>크기:</strong> ${(file.file_size / 1024).toFixed(1)} KB<br>
+                            <strong>업로드 시간:</strong> ${new Date(file.upload_time).toLocaleString()}
+                        </div>
+                    `;
+                    infoDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.log('업로드된 파일 정보 로드 실패:', error);
+            }
+        }
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+            loadStatus();
+            startStatusPolling();
+            loadUploadedFiles(); // 업로드된 파일 정보 로드
+            checkDownloadAvailability(); // 다운로드 가능 여부 확인
+        });
 
         // 페이지 언로드 시 정리
         window.addEventListener('beforeunload', function() {
