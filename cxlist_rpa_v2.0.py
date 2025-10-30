@@ -630,40 +630,12 @@ def main():
         service = Service('/usr/local/bin/chromedriver')
         options = webdriver.ChromeOptions()
         
-        # 서버 환경을 위한 헤드리스 모드 설정
+        # 서버 환경을 위한 헤드리스 모드 설정 (단순화)
         options.add_argument('--headless')  # GUI 없이 실행
         options.add_argument('--no-sandbox')  # 샌드박스 비활성화
         options.add_argument('--disable-dev-shm-usage')  # /dev/shm 사용 비활성화
         options.add_argument('--disable-gpu')  # GPU 가속 비활성화
         options.add_argument('--window-size=1920,1080')  # 창 크기 설정
-        options.add_argument('--disable-extensions')  # 확장 프로그램 비활성화
-        options.add_argument('--disable-logging')  # 로깅 비활성화
-        options.add_argument('--disable-web-security')  # 웹 보안 비활성화
-        options.add_argument('--allow-running-insecure-content')  # 안전하지 않은 콘텐츠 허용
-        
-        # 추가 보안 및 안정성 옵션
-        options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
-        options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument('--ignore-certificate-errors')
-        options.add_argument('--ignore-ssl-errors')
-        options.add_argument('--ignore-certificate-errors-spki-list')
-        options.add_argument('--disable-features=VizDisplayCompositor')
-        options.add_argument('--disable-background-timer-throttling')
-        options.add_argument('--disable-backgrounding-occluded-windows')
-        options.add_argument('--disable-renderer-backgrounding')
-        
-        # 디버깅을 위한 옵션 (문제 해결 후 제거 가능)
-        options.add_argument('--remote-debugging-port=9222')
-        options.add_argument('--enable-logging')
-        options.add_argument('--log-level=0')
-        
-        # 타임아웃 설정
-        options.add_argument('--timeout=30000')
-        options.add_argument('--page-load-strategy=eager')
-        
-        # 환경 변수 설정
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-software-rasterizer')
         
         print("독립 실행 모드: 헤드리스 모드")
         
